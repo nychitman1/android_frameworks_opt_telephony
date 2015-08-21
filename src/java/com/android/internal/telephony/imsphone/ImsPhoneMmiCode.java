@@ -813,10 +813,10 @@ public final class ImsPhoneMmiCode extends Handler implements MmiCode {
                 int serviceClass = siToServiceClass(mSib);
 
                 if (isInterrogate()) {
-                    mPhone.getCallBarring(facility, serviceClass,
+                    mPhone.getCallBarring(facility,
                             obtainMessage(EVENT_SUPP_SVC_QUERY_COMPLETE, this));
                 } else if (isActivate() || isDeactivate()) {
-                    mPhone.setCallBarring(facility, isActivate(), serviceClass, password,
+                    mPhone.setCallBarring(facility, isActivate(), password,
                             obtainMessage(EVENT_SET_COMPLETE, this));
                 } else {
                     throw new RuntimeException ("Invalid or Unsupported MMI Code");

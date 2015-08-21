@@ -1851,5 +1851,4 @@ public final class SmsManager {
                 config.getBoolean(MMS_CONFIG_SUPPORT_HTTP_CHARSET_HEADER));
         return filtered;
     }
-
 }

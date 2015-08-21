@@ -2074,13 +2074,6 @@ public interface CommandsInterface {
 
     /**
      * @hide
-     * samsung stk service implementation - set up registrant for sending
-     * sms send result from modem(RIL) to catService
-     */
-    void setOnCatSendSmsResult(Handler h, int what, Object obj);
-
-    /**
-     * @hide
      * Request the ADN record of all activated UICC applications
      *
      * @param result Callback message containing the count of ADN valid record.

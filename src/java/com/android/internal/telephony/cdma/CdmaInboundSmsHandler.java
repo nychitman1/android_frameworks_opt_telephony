@@ -271,7 +271,7 @@ public class CdmaInboundSmsHandler extends InboundSmsHandler {
      *         {@link Activity#RESULT_OK} if the message has been broadcast
      *         to applications
      */
-    private int processCdmaWapPdu(byte[] pdu, int referenceNumber, String address,
+    private int processCdmaWapPdu(byte[] pdu, int referenceNumber, String address, String dispAddr,
             long timestamp) {
         int index = 0;
 
@@ -316,8 +316,8 @@ public class CdmaInboundSmsHandler extends InboundSmsHandler {
         System.arraycopy(pdu, index, userData, 0, pdu.length - index);
 
         InboundSmsTracker tracker = TelephonyComponentFactory.getInstance().makeInboundSmsTracker(
-                userData, timestamp, destinationPort, true, address, referenceNumber, segment,
-                totalSegments, true, HexDump.toHexString(userData));
+                userData, timestamp, destinationPort, true, address, dispAddr, referenceNumber,
+                segment, totalSegments, true, HexDump.toHexString(userData));
 
         // de-duping is done only for text messages
         return addTrackerToRawTableAndSendMessage(tracker, false /* don't de-dup */);
