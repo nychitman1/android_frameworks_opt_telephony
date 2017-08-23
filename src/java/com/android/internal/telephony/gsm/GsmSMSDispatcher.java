@@ -151,14 +151,15 @@ public final class GsmSMSDispatcher extends SMSDispatcher {
     /** {@inheritDoc} */
     @Override
     protected void sendData(String destAddr, String scAddr, int destPort,
-            byte[] data, PendingIntent sentIntent, PendingIntent deliveryIntent) {
+            byte[] data, PendingIntent sentIntent, PendingIntent deliveryIntent,
+            String callingPackage) {
         SmsMessage.SubmitPdu pdu = SmsMessage.getSubmitPdu(
                 scAddr, destAddr, destPort, data, (deliveryIntent != null));
         if (pdu != null) {
             HashMap map = getSmsTrackerMap(destAddr, scAddr, destPort, data, pdu);
             SmsTracker tracker = getSmsTracker(map, sentIntent, deliveryIntent, getFormat(),
                     null /*messageUri*/, false /*isExpectMore*/, null /*fullMessageText*/,
-                    false /*isText*/, true /*persistMessage*/);
+                    false /*isText*/, true /*persistMessage*/, callingPackage);
 
             String carrierPackage = getCarrierAppPackageName();
             if (carrierPackage != null) {
@@ -179,14 +180,14 @@ public final class GsmSMSDispatcher extends SMSDispatcher {
     @Override
     public void sendText(String destAddr, String scAddr, String text, PendingIntent sentIntent,
             PendingIntent deliveryIntent, Uri messageUri, String callingPkg,
-            boolean persistMessage) {
+            boolean persistMessage, int priority, boolean isExpectMore, int validityPeriod) {
         SmsMessage.SubmitPdu pdu = SmsMessage.getSubmitPdu(
-                scAddr, destAddr, text, (deliveryIntent != null));
+                scAddr, destAddr, text, (deliveryIntent != null), validityPeriod);
         if (pdu != null) {
             HashMap map = getSmsTrackerMap(destAddr, scAddr, text, pdu);
             SmsTracker tracker = getSmsTracker(map, sentIntent, deliveryIntent, getFormat(),
-                    messageUri, false /*isExpectMore*/, text /*fullMessageText*/, true /*isText*/,
-                    persistMessage);
+                    messageUri, isExpectMore, text /*fullMessageText*/,
+                    true /*isText*/, validityPeriod, persistMessage, callingPkg);
 
             String carrierPackage = getCarrierAppPackageName();
             if (carrierPackage != null) {
@@ -220,18 +221,19 @@ public final class GsmSMSDispatcher extends SMSDispatcher {
     protected SmsTracker getNewSubmitPduTracker(String destinationAddress, String scAddress,
             String message, SmsHeader smsHeader, int encoding,
             PendingIntent sentIntent, PendingIntent deliveryIntent, boolean lastPart,
+            int priority, boolean isExpectMore, int validityPeriod,
             AtomicInteger unsentPartCount, AtomicBoolean anyPartFailed, Uri messageUri,
-            String fullMessageText) {
+            String fullMessageText, String callingPackage) {
         SmsMessage.SubmitPdu pdu = SmsMessage.getSubmitPdu(scAddress, destinationAddress,
                 message, deliveryIntent != null, SmsHeader.toByteArray(smsHeader),
-                encoding, smsHeader.languageTable, smsHeader.languageShiftTable);
+                encoding, smsHeader.languageTable, smsHeader.languageShiftTable, validityPeriod);
         if (pdu != null) {
             HashMap map =  getSmsTrackerMap(destinationAddress, scAddress,
                     message, pdu);
             return getSmsTracker(map, sentIntent,
                     deliveryIntent, getFormat(), unsentPartCount, anyPartFailed, messageUri,
-                    smsHeader, !lastPart, fullMessageText, true /*isText*/,
-                    false /*persistMessage*/);
+                    smsHeader, (!lastPart || isExpectMore), fullMessageText, true /*isText*/,
+                    validityPeriod, false /*persistMessage*/, callingPackage);
         } else {
             Rlog.e(TAG, "GsmSMSDispatcher.sendNewSubmitPdu(): getSubmitPdu() returned null");
             return null;
@@ -312,9 +314,15 @@ public final class GsmSMSDispatcher extends SMSDispatcher {
                         IccUtils.bytesToHexString(pdu), reply);
             }
         } else {
-            mCi.sendImsGsmSms(IccUtils.bytesToHexString(smsc),
-                    IccUtils.bytesToHexString(pdu), tracker.mImsRetry,
-                    tracker.mMessageRef, reply);
+            if (!isRetryAlwaysOverIMS()) {
+                mCi.sendImsGsmSms(IccUtils.bytesToHexString(smsc),
+                        IccUtils.bytesToHexString(pdu), tracker.mImsRetry,
+                        tracker.mMessageRef, reply);
+            } else {
+                mCi.sendImsGsmSms(IccUtils.bytesToHexString(smsc),
+                        IccUtils.bytesToHexString(pdu), 0,
+                        tracker.mMessageRef, reply);
+            }
             // increment it here, so in case of SMS_FAIL_RETRY over IMS
             // next retry will be sent using IMS request again.
             tracker.mImsRetry++;

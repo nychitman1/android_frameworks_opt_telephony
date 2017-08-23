@@ -699,7 +699,9 @@ public final class ImsPhoneMmiCode extends Handler implements MmiCode {
             try {
                 int serviceClass = siToServiceClass(mSib);
                 if (serviceClass != SERVICE_CLASS_NONE
-                        && serviceClass != SERVICE_CLASS_VOICE) {
+                        && serviceClass != SERVICE_CLASS_VOICE
+                        && serviceClass != (SERVICE_CLASS_PACKET
+                            + SERVICE_CLASS_DATA_SYNC)) {
                     return false;
                 }
                 return true;
@@ -759,7 +761,7 @@ public final class ImsPhoneMmiCode extends Handler implements MmiCode {
                 int time = siToTime(mSic);
 
                 if (isInterrogate()) {
-                    mPhone.getCallForwardingOption(reason,
+                    mPhone.getCallForwardingOption(reason, serviceClass,
                             obtainMessage(EVENT_QUERY_CF_COMPLETE, this));
                 } else {
                     int cfAction;
@@ -808,12 +810,13 @@ public final class ImsPhoneMmiCode extends Handler implements MmiCode {
 
                 String password = mSia;
                 String facility = scToBarringFacility(mSc);
+                int serviceClass = siToServiceClass(mSib);
 
                 if (isInterrogate()) {
-                    mPhone.getCallBarring(facility,
+                    mPhone.getCallBarring(facility, serviceClass,
                             obtainMessage(EVENT_SUPP_SVC_QUERY_COMPLETE, this));
                 } else if (isActivate() || isDeactivate()) {
-                    mPhone.setCallBarring(facility, isActivate(), password,
+                    mPhone.setCallBarring(facility, isActivate(), serviceClass, password,
                             obtainMessage(EVENT_SET_COMPLETE, this));
                 } else {
                     throw new RuntimeException ("Invalid or Unsupported MMI Code");
@@ -1051,7 +1054,13 @@ public final class ImsPhoneMmiCode extends Handler implements MmiCode {
                 if ((ar.exception == null) && (msg.arg1 == 1)) {
                     boolean cffEnabled = (msg.arg2 == 1);
                     if (mIccRecords != null) {
-                        mPhone.setVoiceCallForwardingFlag(1, cffEnabled, mDialingNumber);
+                        if(siToServiceClass(mSib) == (SERVICE_CLASS_PACKET
+                                    + SERVICE_CLASS_DATA_SYNC)) {
+                            mPhone.setVideoCallForwardingPreference(cffEnabled);
+                            mPhone.notifyCallForwardingIndicator();
+                        } else {
+                            mPhone.setVoiceCallForwardingFlag(1, cffEnabled, mDialingNumber);
+                        }
                     }
                 }
 
