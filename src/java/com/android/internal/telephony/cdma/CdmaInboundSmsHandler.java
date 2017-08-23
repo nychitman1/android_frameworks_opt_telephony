@@ -174,9 +174,6 @@ public class CdmaInboundSmsHandler extends InboundSmsHandler {
 
         if (SmsEnvelope.TELESERVICE_WAP == teleService) {
             return processCdmaWapPdu(sms.getUserData(), sms.mMessageRef,
-<<<<<<< HEAD
-                    sms.getOriginatingAddress(), sms.getTimestampMillis());
-=======
                     sms.getOriginatingAddress(), sms.getDisplayOriginatingAddress(),
                     sms.getTimestampMillis());
         } else if (SmsEnvelope.TELESERVICE_CT_WAP == teleService) {
@@ -188,7 +185,6 @@ public class CdmaInboundSmsHandler extends InboundSmsHandler {
             return processCdmaWapPdu(sms.getUserData(), sms.mMessageRef,
                     sms.getOriginatingAddress(), sms.getDisplayOriginatingAddress(),
                     sms.getTimestampMillis());
->>>>>>> 9c9fb246f24974b6a43207ee942f0f21153f7a82
         }
 
         return dispatchNormalMessage(smsb);

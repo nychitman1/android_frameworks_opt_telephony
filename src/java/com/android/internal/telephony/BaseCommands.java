@@ -933,6 +933,7 @@ public abstract class BaseCommands implements CommandsInterface {
     @Override
     public int getLteOnGsmMode() {
         return TelephonyManager.getLteOnGsmModeStatic();
+    }
 
     @Override
     public void registerForAdnInitDone(Handler h, int what, Object obj) {
